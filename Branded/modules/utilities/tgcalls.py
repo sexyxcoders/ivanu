@@ -1,8 +1,8 @@
 from pytgcalls.types import (
     Update,
-    StreamEnded,
     ChatUpdate,
     ChatUpdateStatus,
+    StreamAudioEnded,
 )
 
 from . import queues
@@ -12,10 +12,10 @@ from .streams import run_stream, close_stream
 
 async def run_async_calls():
 
-    # Voice chat closed / bot kicked / left group
     @call.on_update()
     async def stream_services_handler(_, update: Update):
 
+        # VC closed / kicked / left
         if isinstance(update, ChatUpdate):
             if update.status in (
                 ChatUpdateStatus.CLOSED_VOICE_CHAT,
@@ -24,8 +24,8 @@ async def run_async_calls():
             ):
                 return await close_stream(update.chat_id)
 
-        # Stream ended
-        if isinstance(update, StreamEnded):
+        # Audio stream ended
+        if isinstance(update, StreamAudioEnded):
             chat_id = update.chat_id
             queues.task_done(chat_id)
 
