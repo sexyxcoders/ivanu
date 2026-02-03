@@ -31,7 +31,7 @@ if os.path.exists("Internal"):
 API_ID = int(getenv("API_ID", "22657083"))
 API_HASH = getenv("API_HASH", "d6186691704bd901bdab275ceaab88f3")
 BOT_TOKEN = getenv("BOT_TOKEN", "7694271440:AAHDfhxvmOyjZmlIqZjyo7MqCFDPRW8jutI")
-STRING_SESSION = getenv("STRING_SESSION", "")
+STRING_SESSION = getenv("STRING_SESSION", "AQI5nD4AdJzMUFwRI2m7cAQe7bRdibZ5EX7G67u5PMzDQhXoHSr1fr7y-R9Hqw5q2qM5hO53rrRmo9OkxyqZKt8DYBN9WPMOvLMLbl2ZrB2itODUwIuk2S07D3OHcq1BJQkXIaaA5PPh4ZYmMHwNRvzYg-tjNvLgs2PSB1ClNL-K-QdsIKtHePp7Cn-Iw2nyIsnudGKqvOTPI_kumRL56sfi9kw3JpIiq4YDI4Ue9d5mohKf-KdFF2mtvuGn9DjGzIvc3CuJsSSQD1PF9XWmElRT89ML928cuW8dTgXSgDS9KzkUrMsy4WanpjBLw5BZAAdI8RI6TpKujGNuxizojea7RGw3VwAAAAH8fZf_AA")
 MONGO_DB_URL = getenv("MONGO_DB_URL", "mongodb+srv://StarGiftBot_db_user:gld1RLm4eYbCWZlC@cluster0.erob6sp.mongodb.net/?appName=Cluster0")
 LOG_GROUP_ID = int(getenv("LOG_GROUP_ID", "-1003739009228"))
 
