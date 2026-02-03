@@ -1,6 +1,6 @@
 import asyncio, importlib
 
-from pytgcalls import idle
+from pyrogram import idle
 
 from . import logs, plugs, vars
 from .plugins import ALL_PLUGINS
