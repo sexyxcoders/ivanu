@@ -1,14 +1,21 @@
-import asyncio, os, yt_dlp
+import os
+import yt_dlp
+
+from asyncio.queues import QueueEmpty
+from youtubesearchpython.__future__ import VideosSearch
+
+from pytgcalls.types.input_stream import AudioPiped, VideoPiped
+from pytgcalls.types.input_stream.quality import (
+    HighQualityAudio,
+    HighQualityVideo,
+)
 
 from . import queues
 from ..clients.clients import call
 from ...console import USERBOT_PICTURE
 
-from asyncio.queues import QueueEmpty
-from pytgcalls.types import MediaStream
-from pytgcalls.types import AudioQuality, VideoQuality
-from youtubesearchpython.__future__ import VideosSearch
 
+# -------------------- YouTube Search --------------------
 
 async def get_result(query: str):
     results = VideosSearch(query, limit=1)
@@ -18,34 +25,41 @@ async def get_result(query: str):
             thumbnail = result["thumbnails"][0]["url"].split("?")[0]
         except:
             thumbnail = USERBOT_PICTURE
-        
+
     return url, thumbnail
 
 
-async def run_stream(link, type):
-    if type == "Audio":
-        stream = MediaStream(
-            media_path=link,
-            video_flags=MediaStream.Flags.IGNORE,
-            audio_parameters=AudioQuality.STUDIO,
+# -------------------- Stream Builder --------------------
+
+async def run_stream(source, stream_type):
+    """
+    source: local file path OR direct URL
+    stream_type: 'Audio' | 'Video'
+    """
+
+    if stream_type == "Video":
+        return VideoPiped(
+            source,
+            HighQualityVideo(),
+            HighQualityAudio(),
         )
 
-    elif type == "Video":
-        stream = MediaStream(
-            media_path=link,
-            audio_parameters=AudioQuality.STUDIO,
-            video_parameters=VideoQuality.HD_720p,
-        )
+    # Default: Audio
+    return AudioPiped(
+        source,
+        HighQualityAudio(),
+    )
 
-    return stream
 
+# -------------------- Cleanup --------------------
 
 async def close_stream(chat_id):
     try:
         await queues.clear(chat_id)
     except QueueEmpty:
         pass
+
     try:
-        return await call.leave_call(chat_id)
+        await call.leave_group_call(chat_id)
     except:
         pass
