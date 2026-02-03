@@ -1,52 +1,49 @@
-import os, sys
+import os
+import sys
 
-from pyrogram import Client, filters
+from pyrogram import Client
 from motor.motor_asyncio import AsyncIOMotorClient
-
-# ✅ NEW pytgcalls import
-from pytgcalls import GroupCallFactory
+from pytgcalls import PyTgCalls
 
 from ...console import (
     API_ID,
     API_HASH,
     STRING_SESSION,
-    BOT_TOKEN,
     SESSION_STRING,
-    LOGGER,
+    BOT_TOKEN,
     MONGO_DB_URL,
     LOG_GROUP_ID,
+    LOGGER,
     SUDOERS,
 )
 
+# -------------------- Checks --------------------
 
 def async_config():
     LOGGER.info("Checking Variables ...")
-    if not API_ID:
-        LOGGER.info("'API_ID' - Not Found !")
-        sys.exit()
-    if not API_HASH:
-        LOGGER.info("'API_HASH' - Not Found !")
-        sys.exit()
-    if not BOT_TOKEN:
-        LOGGER.info("'BOT_TOKEN' - Not Found !")
-        sys.exit()
-    if not STRING_SESSION:
-        LOGGER.info("'STRING_SESSION' - Not Found !")
-        sys.exit()
-    if not MONGO_DB_URL:
-        LOGGER.info("'MONGO_DB_URL' - Not Found !")
-        sys.exit()
-    if not LOG_GROUP_ID:
-        LOGGER.info("'LOG_GROUP_ID' - Not Found !")
-        sys.exit()
+
+    required = {
+        "API_ID": API_ID,
+        "API_HASH": API_HASH,
+        "BOT_TOKEN": BOT_TOKEN,
+        "STRING_SESSION": STRING_SESSION,
+        "MONGO_DB_URL": MONGO_DB_URL,
+        "LOG_GROUP_ID": LOG_GROUP_ID,
+    }
+
+    for key, value in required.items():
+        if not value:
+            LOGGER.error(f"'{key}' - Not Found!")
+            sys.exit(1)
+
     LOGGER.info("All Required Variables Collected.")
 
 
 def async_dirs():
     LOGGER.info("Initializing Directories ...")
-    for d in ("downloads", "cache"):
-        if d not in os.listdir():
-            os.mkdir(d)
+
+    for folder in ("downloads", "cache"):
+        os.makedirs(folder, exist_ok=True)
 
     for file in os.listdir():
         if file.endswith((".session", ".session-journal")):
@@ -55,8 +52,8 @@ def async_dirs():
     LOGGER.info("Directories Initialized.")
 
 
+async_config()
 async_dirs()
-
 
 # -------------------- Clients --------------------
 
@@ -67,12 +64,14 @@ app = Client(
     session_string=STRING_SESSION,
 )
 
-ass = Client(
-    name="BRANDEDKING82_ASS",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    session_string=SESSION_STRING,
-)
+assistant = None
+if SESSION_STRING:
+    assistant = Client(
+        name="BRANDEDKING82_ASS",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        session_string=SESSION_STRING,
+    )
 
 bot = Client(
     name="BRANDEDKING82_BOT",
@@ -81,43 +80,38 @@ bot = Client(
     bot_token=BOT_TOKEN,
 )
 
-# -------------------- PyTgCalls (FIXED) --------------------
+# -------------------- PyTgCalls --------------------
 
-if not SESSION_STRING:
-    group_call_factory = GroupCallFactory(app)
-else:
-    group_call_factory = GroupCallFactory(ass)
-
-call = group_call_factory.get_group_call()
-
+call = PyTgCalls(assistant if assistant else app)
 
 # -------------------- Database --------------------
 
-def mongodbase():
+mongodb = None
+
+def init_database():
     global mongodb
     try:
-        LOGGER.info("Connecting To Your Database ...")
-        async_client = AsyncIOMotorClient(MONGO_DB_URL)
-        mongodb = async_client.AdityaHalder
-        LOGGER.info("Connected To Your Database.")
+        LOGGER.info("Connecting to MongoDB ...")
+        client = AsyncIOMotorClient(MONGO_DB_URL)
+        mongodb = client.AdityaHalder
+        LOGGER.info("MongoDB Connected.")
     except Exception as e:
-        LOGGER.error(f"Failed To Connect Database!\nError: {e}")
-        sys.exit()
+        LOGGER.error(f"MongoDB Connection Failed!\n{e}")
+        sys.exit(1)
 
+init_database()
 
-mongodbase()
+# -------------------- Sudo Users --------------------
 
-
-async def sudo_users():
+async def load_sudoers():
     sudoersdb = mongodb.sudoers
-    sudoers = await sudoersdb.find_one({"sudo": "sudo"})
-    sudoers = [] if not sudoers else sudoers["sudoers"]
+    data = await sudoersdb.find_one({"sudo": "sudo"})
 
-    for user_id in sudoers:
-        SUDOERS.append(int(user_id))
+    if data:
+        for uid in data.get("sudoers", []):
+            SUDOERS.append(int(uid))
 
     LOGGER.info("Sudo Users Loaded.")
-
 
 # -------------------- Startup --------------------
 
@@ -127,21 +121,21 @@ async def run_async_clients():
     LOGGER.info("Userbot Started.")
 
     try:
-        await app.send_message(LOG_GROUP_ID, "**Userbot Started.**")
+        await app.send_message(LOG_GROUP_ID, "**Userbot Started**")
     except:
         pass
 
-    if SESSION_STRING:
+    if assistant:
         LOGGER.info("Starting Assistant ...")
-        await ass.start()
+        await assistant.start()
         LOGGER.info("Assistant Started.")
 
-    LOGGER.info("Starting Helper Robot ...")
+    LOGGER.info("Starting Helper Bot ...")
     await bot.start()
-    LOGGER.info("Helper Robot Started.")
+    LOGGER.info("Helper Bot Started.")
 
-    LOGGER.info("Starting PyTgCalls Client ...")
+    LOGGER.info("Starting PyTgCalls ...")
     await call.start()
-    LOGGER.info("PyTgCalls Client Started.")
+    LOGGER.info("PyTgCalls Started.")
 
-    await sudo_users()
+    await load_sudoers()
