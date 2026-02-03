@@ -1,5 +1,9 @@
-from pytgcalls import filters
-from pytgcalls.types import ChatUpdate, Update
+from pytgcalls.types import (
+    Update,
+    StreamEnded,
+    ChatUpdate,
+    ChatUpdateStatus,
+)
 
 from . import queues
 from ..clients.clients import app, call
@@ -7,30 +11,30 @@ from .streams import run_stream, close_stream
 
 
 async def run_async_calls():
-    @call.on_update(
-        filters.chat_update(
-            ChatUpdate.Status.CLOSED_VOICE_CHAT
-        )
-    )
-    @call.on_update(
-        filters.chat_update(
-            ChatUpdate.Status.KICKED | ChatUpdate.Status.LEFT_GROUP,
-        ),
-    )
+
+    # Voice chat closed / bot kicked / left group
+    @call.on_update()
     async def stream_services_handler(_, update: Update):
-        return await close_stream(update.chat_id)
-    
-    
-    @call.on_update(filters.stream_end)
-    async def stream_end_handler(_, update: Update):
-        chat_id = update.chat_id
-        queues.task_done(chat_id)
-        if queues.is_empty(chat_id):
-            return await close_stream(chat_id)
-        check = queues.get(chat_id)
-        file = check["file"]
-        type = check["type"]
-        stream = await run_stream(file, type)
-        return await call.play(chat_id, stream)
-    
-        
+
+        if isinstance(update, ChatUpdate):
+            if update.status in (
+                ChatUpdateStatus.CLOSED_VOICE_CHAT,
+                ChatUpdateStatus.KICKED,
+                ChatUpdateStatus.LEFT_GROUP,
+            ):
+                return await close_stream(update.chat_id)
+
+        # Stream ended
+        if isinstance(update, StreamEnded):
+            chat_id = update.chat_id
+            queues.task_done(chat_id)
+
+            if queues.is_empty(chat_id):
+                return await close_stream(chat_id)
+
+            check = queues.get(chat_id)
+            file = check["file"]
+            stream_type = check["type"]
+
+            stream = await run_stream(file, stream_type)
+            return await call.play(chat_id, stream)
