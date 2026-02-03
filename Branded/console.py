@@ -28,12 +28,12 @@ if os.path.exists("Internal"):
    load_dotenv("Internal")
 
 
-API_ID = int(getenv("API_ID", 0))
-API_HASH = getenv("API_HASH", None)
-BOT_TOKEN = getenv("BOT_TOKEN", None)
-STRING_SESSION = getenv("STRING_SESSION", None)
-MONGO_DB_URL = getenv("MONGO_DB_URL", None)
-LOG_GROUP_ID = int(getenv("LOG_GROUP_ID", 0))
+API_ID = int(getenv("API_ID", "22657083"))
+API_HASH = getenv("API_HASH", "d6186691704bd901bdab275ceaab88f3")
+BOT_TOKEN = getenv("BOT_TOKEN", "7694271440:AAHDfhxvmOyjZmlIqZjyo7MqCFDPRW8jutI")
+STRING_SESSION = getenv("STRING_SESSION", "")
+MONGO_DB_URL = getenv("MONGO_DB_URL", "mongodb+srv://StarGiftBot_db_user:gld1RLm4eYbCWZlC@cluster0.erob6sp.mongodb.net/?appName=Cluster0")
+LOG_GROUP_ID = int(getenv("LOG_GROUP_ID", "-1003739009228"))
 
 
 # OPTIONAL VARIABLES
@@ -52,7 +52,7 @@ PM_GUARD_LIMIT = int(getenv("PM_GUARD_LIMIT", 5))
 
 
 # USERBOT DEFAULT IMAGE
-USERBOT_PICTURE = getenv("USERBOT_PICTURE", "https://te.legra.ph/file/11cfa74175b590014bd16.jpg")
+USERBOT_PICTURE = getenv("USERBOT_PICTURE", "https://telegram.me/share/url?url=https://files.catbox.moe/9ux4mb.jpg")
 
 
 
